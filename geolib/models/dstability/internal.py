@@ -709,7 +709,9 @@ class PersistableSuTable(DStabilityBaseModelStructure):
         su_table = []
         for su_table_point in self.SuTablePoints:
             su_table.append(
-                SuTablePoint(su=su_table_point.Su, stress=su_table_point.EffectiveStress)
+                SuTablePoint(
+                    su=su_table_point.Su, stress=su_table_point.EffectiveStress
+                )
             )
         return su_table
 
@@ -988,7 +990,9 @@ class SoilCollection(DStabilitySubStructure):
                     PersistableSigmaTauTablePoint(EffectiveStress=0, ShearStrength=5),
                     PersistableSigmaTauTablePoint(EffectiveStress=10, ShearStrength=5),
                     PersistableSigmaTauTablePoint(EffectiveStress=35, ShearStrength=30),
-                    PersistableSigmaTauTablePoint(EffectiveStress=100, ShearStrength=60),
+                    PersistableSigmaTauTablePoint(
+                        EffectiveStress=100, ShearStrength=60
+                    ),
                 ]
             ),
             VolumetricWeightAbovePhreaticLevel=16.0,
@@ -1029,6 +1033,7 @@ class SoilCollection(DStabilitySubStructure):
 
     @staticmethod
     def __to_global_stochastic_parameter(
+        deterministic_value: float | None,
         persistable_stochastic_parameter: PersistableStochasticParameter,
     ):
         from geolib.soils import StochasticParameter
@@ -1037,6 +1042,7 @@ class SoilCollection(DStabilitySubStructure):
             is_probabilistic=persistable_stochastic_parameter.IsProbabilistic,
             mean=persistable_stochastic_parameter.Mean,
             standard_deviation=persistable_stochastic_parameter.StandardDeviation,
+            deterministic=deterministic_value,
         )
 
     def __determine_strength_increase_exponent(self, persistable_soil: PersistableSoil):
@@ -1047,6 +1053,7 @@ class SoilCollection(DStabilitySubStructure):
         ):
             # SHANSEP model is selected so the StrengthIncreaseExponentStochasticParameter from persistable_soil should be used
             return self.__to_global_stochastic_parameter(
+                persistable_soil.SuShearStrengthModel.StrengthIncreaseExponent,
                 persistable_soil.SuShearStrengthModel.StrengthIncreaseExponentStochasticParameter
             )
         elif (
@@ -1056,6 +1063,7 @@ class SoilCollection(DStabilitySubStructure):
         ):
             # SU table is selected so the StrengthIncreaseExponentStochasticParameter from SuTable should be used
             return self.__to_global_stochastic_parameter(
+                persistable_soil.SuTable.StrengthIncreaseExponent,
                 persistable_soil.SuTable.StrengthIncreaseExponentStochasticParameter
             )
         else:
@@ -1071,12 +1079,15 @@ class SoilCollection(DStabilitySubStructure):
 
         mohr_coulomb_parameters = MohrCoulombParameters(
             cohesion=self.__to_global_stochastic_parameter(
+                persistable_soil.MohrCoulombAdvancedShearStrengthModel.Cohesion,
                 persistable_soil.MohrCoulombAdvancedShearStrengthModel.CohesionStochasticParameter
             ),
             friction_angle=self.__to_global_stochastic_parameter(
+                persistable_soil.MohrCoulombAdvancedShearStrengthModel.FrictionAngle,
                 persistable_soil.MohrCoulombAdvancedShearStrengthModel.FrictionAngleStochasticParameter
             ),
             dilatancy_angle=self.__to_global_stochastic_parameter(
+                persistable_soil.MohrCoulombAdvancedShearStrengthModel.Dilatancy,
                 persistable_soil.MohrCoulombAdvancedShearStrengthModel.DilatancyStochasticParameter
             ),
             cohesion_and_friction_angle_correlated=persistable_soil.MohrCoulombAdvancedShearStrengthModel.CohesionAndFrictionAngleCorrelated,
@@ -1093,6 +1104,7 @@ class SoilCollection(DStabilitySubStructure):
         )
         undrained_parameters = UndrainedParameters(
             shear_strength_ratio=self.__to_global_stochastic_parameter(
+                persistable_soil.SuShearStrengthModel.ShearStrengthRatio,
                 persistable_soil.SuShearStrengthModel.ShearStrengthRatioStochasticParameter
             ),
             strength_increase_exponent=strength_increase_exponent,
@@ -1691,7 +1703,7 @@ class PersistableTangentArea(DStabilityBaseModelStructure):
     Height: float | None = 0.0
     Label: str | None = ""
     Notes: str | None = ""
-    TopZ: float | str | None = "NaN"
+    TopZ: float | str | None = None
 
 
 class PersistableUpliftVanParticleSwarmSettings(DStabilityBaseModelStructure):
@@ -1842,7 +1854,9 @@ class BishopBruteForceResult(DStabilitySubStructure):
         """Get condensed slipcircle data"""
         try:
             return BishopSlipCircleResult(
-                x=self.Circle.Center.X, z=self.Circle.Center.Z, radius=self.Circle.Radius
+                x=self.Circle.Center.X,
+                z=self.Circle.Center.Z,
+                radius=self.Circle.Radius,
             )
         except (ValidationError, AttributeError):
             raise ValueError(
@@ -1920,7 +1934,9 @@ class BishopReliabilityResult(DStabilitySubStructure):
     StateLinePointContributions: (
         list[PersistableStateLinePointContribution | None] | None
     ) = None
-    StatePointContributions: list[PersistableStatePointContribution | None] | None = None
+    StatePointContributions: list[PersistableStatePointContribution | None] | None = (
+        None
+    )
 
     @field_validator("Id", mode="before")
     def transform_id_to_str(cls, value) -> str:
@@ -1936,7 +1952,9 @@ class BishopReliabilityResult(DStabilitySubStructure):
         """Get condensed slipcircle data"""
         try:
             return BishopSlipCircleResult(
-                x=self.Circle.Center.X, z=self.Circle.Center.Z, radius=self.Circle.Radius
+                x=self.Circle.Center.X,
+                z=self.Circle.Center.Z,
+                radius=self.Circle.Radius,
             )
         except (ValidationError, AttributeError):
             raise ValueError(
@@ -1958,7 +1976,9 @@ class BishopBruteForceReliabilityResult(DStabilitySubStructure):
     StateLinePointContributions: (
         list[PersistableStateLinePointContribution | None] | None
     ) = None
-    StatePointContributions: list[PersistableStatePointContribution | None] | None = None
+    StatePointContributions: list[PersistableStatePointContribution | None] | None = (
+        None
+    )
     ResultThreshold: float | str | None = "NaN"
     SlipPlaneResults: list | None = None
 
@@ -1976,7 +1996,9 @@ class BishopBruteForceReliabilityResult(DStabilitySubStructure):
         """Get condensed slipcircle data"""
         try:
             return BishopSlipCircleResult(
-                x=self.Circle.Center.X, z=self.Circle.Center.Z, radius=self.Circle.Radius
+                x=self.Circle.Center.X,
+                z=self.Circle.Center.Z,
+                radius=self.Circle.Radius,
             )
         except (ValidationError, AttributeError):
             raise ValueError(
@@ -2005,7 +2027,9 @@ class BishopResult(DStabilitySubStructure):
         """Get condensed slipcircle data"""
         try:
             return BishopSlipCircleResult(
-                x=self.Circle.Center.X, z=self.Circle.Center.Z, radius=self.Circle.Radius
+                x=self.Circle.Center.X,
+                z=self.Circle.Center.Z,
+                radius=self.Circle.Radius,
             )
         except (ValidationError, AttributeError):
             raise ValueError(
@@ -2112,7 +2136,9 @@ class SpencerReliabilityResult(DStabilitySubStructure):
     StateLinePointContributions: (
         list[PersistableStateLinePointContribution | None] | None
     ) = None
-    StatePointContributions: list[PersistableStatePointContribution | None] | None = None
+    StatePointContributions: list[PersistableStatePointContribution | None] | None = (
+        None
+    )
 
     @field_validator("Id", mode="before")
     def transform_id_to_str(cls, value) -> str:
@@ -2150,7 +2176,9 @@ class SpencerGeneticAlgorithmReliabilityResult(DStabilitySubStructure):
     StateLinePointContributions: (
         list[PersistableStateLinePointContribution | None] | None
     ) = None
-    StatePointContributions: list[PersistableStatePointContribution | None] | None = None
+    StatePointContributions: list[PersistableStatePointContribution | None] | None = (
+        None
+    )
 
     @field_validator("Id", mode="before")
     def transform_id_to_str(cls, value) -> str:
@@ -2255,7 +2283,9 @@ class UpliftVanReliabilityResult(DStabilitySubStructure):
     StateLinePointContributions: (
         list[PersistableStateLinePointContribution | None] | None
     ) = None
-    StatePointContributions: list[PersistableStatePointContribution | None] | None = None
+    StatePointContributions: list[PersistableStatePointContribution | None] | None = (
+        None
+    )
     TangentLine: float | str | None = "NaN"
 
     @field_validator("Id", mode="before")
@@ -2301,7 +2331,9 @@ class UpliftVanParticleSwarmReliabilityResult(DStabilitySubStructure):
     StateLinePointContributions: (
         list[PersistableStateLinePointContribution | None] | None
     ) = None
-    StatePointContributions: list[PersistableStatePointContribution | None] | None = None
+    StatePointContributions: list[PersistableStatePointContribution | None] | None = (
+        None
+    )
     TangentLine: float | str | None = "NaN"
 
     @field_validator("Id", mode="before")
@@ -2398,7 +2430,9 @@ class DStabilityStructure(BaseModelStructure):
     """
 
     # input part
-    watermeshes: list[WaterMesh] = [WaterMesh(Id="21")]  # watermeshes/watermeshes_x.json
+    watermeshes: list[WaterMesh] = [
+        WaterMesh(Id="21")
+    ]  # watermeshes/watermeshes_x.json
     waternets: list[Waternet] = [Waternet(Id="14")]  # waternets/waternet_x.json
     waternetcreatorsettings: list[WaternetCreatorSettings] = [
         WaternetCreatorSettings(Id="15")
@@ -2789,7 +2823,9 @@ class DStabilityStructure(BaseModelStructure):
         )
 
     def _get_excavations(self, scenario_index: int, stage_index: int):
-        decorations_id = self.scenarios[scenario_index].Stages[stage_index].DecorationsId
+        decorations_id = (
+            self.scenarios[scenario_index].Stages[stage_index].DecorationsId
+        )
 
         for decoration in self.decorations:
             if decoration.Id == decorations_id:
