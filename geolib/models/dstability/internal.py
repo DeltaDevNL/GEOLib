@@ -1034,6 +1034,7 @@ class SoilCollection(DStabilitySubStructure):
 
     @staticmethod
     def __to_global_stochastic_parameter(
+        deterministic_value: float | None,
         persistable_stochastic_parameter: PersistableStochasticParameter,
     ):
         from geolib.soils import StochasticParameter
@@ -1042,6 +1043,7 @@ class SoilCollection(DStabilitySubStructure):
             is_probabilistic=persistable_stochastic_parameter.IsProbabilistic,
             mean=persistable_stochastic_parameter.Mean,
             standard_deviation=persistable_stochastic_parameter.StandardDeviation,
+            deterministic=deterministic_value,
         )
 
     def __determine_strength_increase_exponent(self, persistable_soil: PersistableSoil):
@@ -1052,6 +1054,7 @@ class SoilCollection(DStabilitySubStructure):
         ):
             # SHANSEP model is selected so the StrengthIncreaseExponentStochasticParameter from persistable_soil should be used
             return self.__to_global_stochastic_parameter(
+                persistable_soil.SuShearStrengthModel.StrengthIncreaseExponent,
                 persistable_soil.SuShearStrengthModel.StrengthIncreaseExponentStochasticParameter
             )
         elif (
@@ -1061,6 +1064,7 @@ class SoilCollection(DStabilitySubStructure):
         ):
             # SU table is selected so the StrengthIncreaseExponentStochasticParameter from SuTable should be used
             return self.__to_global_stochastic_parameter(
+                persistable_soil.SuTable.StrengthIncreaseExponent,
                 persistable_soil.SuTable.StrengthIncreaseExponentStochasticParameter
             )
         else:
@@ -1076,12 +1080,15 @@ class SoilCollection(DStabilitySubStructure):
 
         mohr_coulomb_parameters = MohrCoulombParameters(
             cohesion=self.__to_global_stochastic_parameter(
+                persistable_soil.MohrCoulombAdvancedShearStrengthModel.Cohesion,
                 persistable_soil.MohrCoulombAdvancedShearStrengthModel.CohesionStochasticParameter
             ),
             friction_angle=self.__to_global_stochastic_parameter(
+                persistable_soil.MohrCoulombAdvancedShearStrengthModel.FrictionAngle,
                 persistable_soil.MohrCoulombAdvancedShearStrengthModel.FrictionAngleStochasticParameter
             ),
             dilatancy_angle=self.__to_global_stochastic_parameter(
+                persistable_soil.MohrCoulombAdvancedShearStrengthModel.Dilatancy,
                 persistable_soil.MohrCoulombAdvancedShearStrengthModel.DilatancyStochasticParameter
             ),
             cohesion_and_friction_angle_correlated=persistable_soil.MohrCoulombAdvancedShearStrengthModel.CohesionAndFrictionAngleCorrelated,
@@ -1098,6 +1105,7 @@ class SoilCollection(DStabilitySubStructure):
         )
         undrained_parameters = UndrainedParameters(
             shear_strength_ratio=self.__to_global_stochastic_parameter(
+                persistable_soil.SuShearStrengthModel.ShearStrengthRatio,
                 persistable_soil.SuShearStrengthModel.ShearStrengthRatioStochasticParameter
             ),
             strength_increase_exponent=strength_increase_exponent,
