@@ -36,7 +36,7 @@ class StochasticParameter(SoilBaseModel):
     standard_deviation: float | None = 0
     distribution_type: DistributionType | None = DistributionType.Normal
     correlation_coefficient: float | None = None
-    deterministic: float | None = None
+    deterministic: float | None = 0
 
 
 class ShearStrengthModelTypePhreaticLevel(Enum):

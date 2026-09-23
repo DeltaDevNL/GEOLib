@@ -18,8 +18,8 @@ class TestSoils:
 
         assert isinstance(soil.mohr_coulomb_parameters.cohesion, StochasticParameter)
         assert soil.mohr_coulomb_parameters.cohesion.mean == 2
-        assert soil.mohr_coulomb_parameters.cohesion.standard_deviation == 0
-        assert soil.mohr_coulomb_parameters.cohesion.deterministic == None
+        assert soil.mohr_coulomb_parameters.cohesion.standard_deviation == 0  # default
+        assert soil.mohr_coulomb_parameters.cohesion.deterministic == 0  # default
 
     @pytest.mark.unittest
     def test_set_stochastic_parameters_from_float_deterministic(self):
@@ -46,7 +46,7 @@ class TestSoils:
         assert isinstance(soil.mohr_coulomb_parameters.cohesion, StochasticParameter)
         assert soil.mohr_coulomb_parameters.cohesion.mean == 2
         assert soil.mohr_coulomb_parameters.cohesion.standard_deviation == 1
-        assert soil.mohr_coulomb_parameters.cohesion.deterministic == None
+        assert soil.mohr_coulomb_parameters.cohesion.deterministic == 0  # default
 
     @pytest.mark.unittest
     def test_set_stochastic_parameters_from_stochastic_parameter_deterministic(self):
@@ -62,7 +62,7 @@ class TestSoils:
         assert isinstance(soil.mohr_coulomb_parameters.cohesion, StochasticParameter)
         assert soil.mohr_coulomb_parameters.cohesion.mean == 2
         assert soil.mohr_coulomb_parameters.cohesion.standard_deviation == 1
-        assert soil.mohr_coulomb_parameters.cohesion.deterministic == None
+        assert soil.mohr_coulomb_parameters.cohesion.deterministic == 0  # default
 
     @pytest.mark.unittest
     def test_set_all_stochastic_parameters(self):
