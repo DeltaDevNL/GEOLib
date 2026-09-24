@@ -6,6 +6,7 @@ from geolib.soils import (
     ShearStrengthModelTypePhreaticLevel,
     Soil,
     StochasticParameter,
+    SoilWeightParameters,
 )
 
 
@@ -216,6 +217,10 @@ class TestDStabilitySoil:
             name="TestName",
             code="Test",
             mohr_coulomb_parameters=mohr_coulomb_parameters,
+            soil_weight_parameters=SoilWeightParameters(
+                saturated_weight=17,
+                unsaturated_weight=15
+            )
         )
         dstability_model.add_soil(soil_1)
 
@@ -231,6 +236,14 @@ class TestDStabilitySoil:
         assert (
             global_soil.mohr_coulomb_parameters.friction_angle
             == soil_1.mohr_coulomb_parameters.friction_angle
+        )
+        assert (
+            global_soil.soil_weight_parameters.saturated_weight
+            == soil_1.soil_weight_parameters.saturated_weight
+        )
+        assert (
+            global_soil.soil_weight_parameters.unsaturated_weight
+            == soil_1.soil_weight_parameters.unsaturated_weight
         )
 
     def test_has_10_default_soils(self):
