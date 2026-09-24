@@ -1116,10 +1116,17 @@ class SoilCollection(DStabilitySubStructure):
         )
 
         soil_weight_parameters = SoilWeightParameters()
+        # Also set mean to match behavior in Soil.set_stochastic_parameters
         soil_weight_parameters.saturated_weight.mean = (
-            persistable_soil.VolumetricWeightAbovePhreaticLevel
+            persistable_soil.VolumetricWeightBelowPhreaticLevel
+        )
+        soil_weight_parameters.saturated_weight.deterministic = (
+            persistable_soil.VolumetricWeightBelowPhreaticLevel
         )
         soil_weight_parameters.unsaturated_weight.mean = (
+            persistable_soil.VolumetricWeightAbovePhreaticLevel
+        )
+        soil_weight_parameters.unsaturated_weight.deterministic = (
             persistable_soil.VolumetricWeightAbovePhreaticLevel
         )
 
