@@ -813,6 +813,12 @@ class PersistableSoil(DStabilityBaseModelStructure):
         return str(value)
 
 
+def nan_to_none(value: float | None) -> float | None:
+    if isinstance(value, float) and not isfinite(value):
+        return None
+    return value
+
+
 class SoilCollection(DStabilitySubStructure):
     """soils.json"""
 
@@ -1042,7 +1048,7 @@ class SoilCollection(DStabilitySubStructure):
             is_probabilistic=persistable_stochastic_parameter.IsProbabilistic,
             mean=persistable_stochastic_parameter.Mean,
             standard_deviation=persistable_stochastic_parameter.StandardDeviation,
-            deterministic=deterministic_value,
+            deterministic=nan_to_none(deterministic_value),
         )
 
     def __determine_strength_increase_exponent(self, persistable_soil: PersistableSoil):
