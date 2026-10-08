@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import pytest
+
 from geolib.geometry import Point
 from geolib.models.dstability.dstability_model import DStabilityModel
 from geolib.models.dstability.internal import (
@@ -16,7 +17,6 @@ from geolib.models.dstability.states import (
     DStabilityStress,
 )
 from geolib.soils import Soil
-
 from tests.utils import TestUtils
 
 
@@ -44,7 +44,8 @@ class TestDStabilityStates:
 
         _ = dstability_model.add_state_point(dstability_state_point)
         assert isinstance(
-            dstability_model.datastructure.states[0].StatePoints[0], PersistableStatePoint
+            dstability_model.datastructure.states[0].StatePoints[0],
+            PersistableStatePoint,
         )
 
     @pytest.mark.unittest
@@ -97,7 +98,6 @@ class TestDStabilityStates:
 
         # 2. Verify initial expectations.
         assert os.path.exists(test_input_filepath)
-        assert dstability_model is not None
 
         # 3. Run test.
         dstability_model.parse(test_input_filepath)
@@ -128,7 +128,6 @@ class TestDStabilityStates:
 
         # 2. Verify initial expectations.
         assert os.path.exists(test_input_filepath)
-        assert dstability_model is not None
 
         # 3. Run test.
         dstability_model.parse(test_input_filepath)

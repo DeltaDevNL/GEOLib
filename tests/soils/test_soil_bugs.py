@@ -1,7 +1,8 @@
 import pytest
+from pydantic_core._pydantic_core import ValidationError
+
 from geolib.models.dfoundations.dfoundations_model import DFoundationsModel
 from geolib.soils import MohrCoulombParameters, Soil, SoilType
-from pydantic_core._pydantic_core import ValidationError
 
 
 class TestNaNSoils:
@@ -108,5 +109,5 @@ class TestNaNSoils:
             soil_type.soil_weight_parameters.unsaturated_weight = soil["unsat"]
             model.add_soil(soil_type)
             assert (
-                model.soils[soil_type.name].soilca == 0.0040000
+                model.soils[soil_type.name].soilca == pytest.approx(0.0040000)
             ), "Should have default Ca with 0.004000"

@@ -1,4 +1,5 @@
 import pytest
+
 from geolib.models.dgeoflow.dgeoflow_model import DGeoFlowModel
 from geolib.soils import Soil
 from geolib.soils.soil import StorageParameters
@@ -22,64 +23,64 @@ class TestDGeoFlowSoil:
         storage_parameters = StorageParameters(
             horizontal_permeability=10.0, vertical_permeability=20.0
         )
-        soil_1 = Soil(name="TestName", code="Test", storage_parameters=storage_parameters)
+        soil_1 = Soil(
+            name="TestName", code="Test", storage_parameters=storage_parameters
+        )
         added_soil_id = dgeoflow_model.add_soil(soil_1)
 
         assert added_soil_id == "18"
-        assert soil_1.storage_parameters.horizontal_permeability.mean == 10.0
-        assert soil_1.storage_parameters.vertical_permeability.mean == 20.0
+        assert soil_1.storage_parameters.horizontal_permeability.mean == pytest.approx(
+            10.0
+        )
+        assert soil_1.storage_parameters.vertical_permeability.mean == pytest.approx(
+            20.0
+        )
 
         dgeoflow_model.edit_soil(
             code=soil_1.code, horizontal_permeability=2.0, vertical_permeability=35.0
         )
-        assert (
-            pytest.approx(
-                dgeoflow_model.soils.get_soil(
-                    "Test"
-                ).storage_parameters.horizontal_permeability
-            )
-            == 2.0
-        )
-        assert (
-            pytest.approx(
-                dgeoflow_model.soils.get_soil(
-                    "Test"
-                ).storage_parameters.vertical_permeability
-            )
-            == 35.0
-        )
+        assert pytest.approx(
+            dgeoflow_model.soils.get_soil(
+                "Test"
+            ).storage_parameters.horizontal_permeability
+        ) == pytest.approx(2.0)
+        assert pytest.approx(
+            dgeoflow_model.soils.get_soil(
+                "Test"
+            ).storage_parameters.vertical_permeability
+        ) == pytest.approx(35.0)
 
     def test_dgeoflow_edit_soil_by_name(self):
         dgeoflow_model = DGeoFlowModel(filename=None)
         storage_parameters = StorageParameters(
             horizontal_permeability=10.0, vertical_permeability=20.0
         )
-        soil_1 = Soil(name="TestName", code="Test", storage_parameters=storage_parameters)
+        soil_1 = Soil(
+            name="TestName", code="Test", storage_parameters=storage_parameters
+        )
         added_soil_id = dgeoflow_model.add_soil(soil_1)
 
         assert added_soil_id == "18"
-        assert soil_1.storage_parameters.horizontal_permeability.mean == 10.0
-        assert soil_1.storage_parameters.vertical_permeability.mean == 20.0
+        assert soil_1.storage_parameters.horizontal_permeability.mean == pytest.approx(
+            10.0
+        )
+        assert soil_1.storage_parameters.vertical_permeability.mean == pytest.approx(
+            20.0
+        )
 
         dgeoflow_model.edit_soil_by_name(
             name=soil_1.name, horizontal_permeability=2.0, vertical_permeability=35.0
         )
-        assert (
-            pytest.approx(
-                dgeoflow_model.soils.get_soil(
-                    "Test"
-                ).storage_parameters.horizontal_permeability
-            )
-            == 2.0
-        )
-        assert (
-            pytest.approx(
-                dgeoflow_model.soils.get_soil(
-                    "Test"
-                ).storage_parameters.vertical_permeability
-            )
-            == 35.0
-        )
+        assert pytest.approx(
+            dgeoflow_model.soils.get_soil(
+                "Test"
+            ).storage_parameters.horizontal_permeability
+        ) == pytest.approx(2.0)
+        assert pytest.approx(
+            dgeoflow_model.soils.get_soil(
+                "Test"
+            ).storage_parameters.vertical_permeability
+        ) == pytest.approx(35.0)
 
     def test_has_10_default_soils(self):
         dgeoflow_model = DGeoFlowModel(filename=None)

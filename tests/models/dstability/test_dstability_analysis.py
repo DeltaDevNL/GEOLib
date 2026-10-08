@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import pytest
+
 from geolib.geometry.one import Point
 from geolib.models.dstability.analysis import (
     DStabilityBishopAnalysisMethod,
@@ -17,7 +18,6 @@ from geolib.models.dstability.analysis import (
     DStabilityUpliftVanParticleSwarmAnalysisMethod,
 )
 from geolib.models.dstability.dstability_model import DStabilityModel
-
 from tests.utils import TestUtils
 
 
@@ -124,7 +124,6 @@ class TestDStabilityAnalysis:
 
         # 2. Verify initial expectations.
         assert os.path.exists(test_input_filepath)
-        assert dstability_model is not None
 
         # 3. Run test.
         dstability_model.parse(test_input_filepath)
@@ -149,7 +148,6 @@ class TestDStabilityAnalysis:
 
         # 2. Verify initial expectations.
         assert os.path.exists(test_input_filepath)
-        assert dstability_model is not None
 
         # 3. Run test.
         dstability_model.parse(test_input_filepath)
@@ -180,7 +178,6 @@ class TestDStabilityAnalysis:
 
         # 2. Verify initial expectations.
         assert os.path.exists(test_input_filepath)
-        assert dstability_model is not None
 
         # 3. Run test.
         dstability_model.parse(test_input_filepath)
@@ -215,7 +212,6 @@ class TestDStabilityAnalysis:
 
         # 2. Verify initial expectations.
         assert os.path.exists(test_input_filepath)
-        assert dstability_model is not None
 
         # 3. Run test.
         dstability_model.parse(test_input_filepath)
@@ -250,7 +246,6 @@ class TestDStabilityAnalysis:
 
         # 2. Verify initial expectations.
         assert os.path.exists(test_input_filepath)
-        assert dstability_model is not None
 
         # 3. Run test.
         dstability_model.parse(test_input_filepath)
@@ -279,7 +274,6 @@ class TestDStabilityAnalysis:
 
         # 2. Verify initial expectations.
         assert os.path.exists(test_input_filepath)
-        assert dstability_model is not None
 
         # 3. Run test.
         dstability_model.parse(test_input_filepath)
@@ -292,7 +286,9 @@ class TestDStabilityAnalysis:
                     width=4.949999999999999,
                 ),
                 search_area_b=DStabilitySearchArea(
-                    height=2.08, top_left=Point(x=19.31, z=11.35), width=4.790000000000003
+                    height=2.08,
+                    top_left=Point(x=19.31, z=11.35),
+                    width=4.790000000000003,
                 ),
                 slip_plane_constraints=DStabilitySlipPlaneConstraints(
                     width_zone_a=-5.0, x_left_zone_a=-5.0

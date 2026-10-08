@@ -148,17 +148,37 @@ advise to also add type hints. An example:
 Adding requirements
 -------------------
 
-New requirements can be added using Poetry: https://python-poetry.org/docs/
-For example, adding a new package:
+New requirements can be added through Pixi.
 
-.. code-block:: bash
+For the default environment, use::
 
-    $ poetry add new_package
+    $ pixi add new_package
 
-It's good to keep the `requirements.txt` up to date, so afterwards run:
+This updates both `pyproject.toml` and `pixi.lock` with the new dependency and its transitive dependencies.
 
-.. code-block:: bash
+To add a package to a specific feature/environment, use::
 
-    $ poetry install
-    $ poetry export -E server -f requirements.txt --output requirements.txt --without-hashes
-    $ poetry export -E server -f requirements.txt --output requirements-dev.txt --with dev --without-hashes
+    $ pixi add --feature dev new_dev_package       # Add to dev feature
+    $ pixi add --feature test new_test_package     # Add to test feature
+    $ pixi add --feature server new_server_package # Add to server feature
+    $ pixi add --feature docs new_docs_package     # Add to docs feature
+
+Available Tasks
+---------------
+
+GEOLib provides several predefined tasks for common development operations:
+
+**Development tasks** (run with ``pixi run -e dev <task>``):
+
+    $ pixi run -e dev format          # Auto-format code with black and isort
+    $ pixi run -e dev lint            # Check code style with black, flake8, and isort
+    $ pixi run -e dev type-check      # Type checking with mypy
+
+**Testing tasks** (run with ``pixi run -e test <task>``):
+
+    $ pixi run -e test test            # Run pytest
+    $ pixi run -e test test-cov        # Run pytest with coverage report
+
+**Documentation tasks** (run with ``pixi run -e docs <task>``):
+
+    $ pixi run -e docs build-docs      # Build HTML documentation

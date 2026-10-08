@@ -6,6 +6,8 @@ from pathlib import Path
 from tkinter import Label
 
 import pytest
+from teamcity import is_running_under_teamcity
+
 from geolib.geometry.one import Point
 from geolib.models import BaseModel
 from geolib.models.dgeoflow import DGeoFlowModel
@@ -16,8 +18,6 @@ from geolib.models.dgeoflow.internal import (
     InternalPipeTrajectory,
     PersistablePoint,
 )
-from teamcity import is_running_under_teamcity
-
 from tests.utils import TestUtils, only_teamcity
 
 
@@ -64,10 +64,7 @@ class TestDGeoFlowModel:
     @pytest.mark.parametrize(
         "filepath",
         [
-            pytest.param("dgeoflow/Berekening3", id="Input Structure"),
-            pytest.param(
-                "dgeoflow/Berekening3/Berekening3.flox", id="Input Structure for zip"
-            ),
+            pytest.param("dgeoflow/Berekening3.flox", id="Input Structure for zip"),
         ],
     )
     def test_given_data_dir_when_parse_then_datastructure_of_expected_type(
@@ -92,10 +89,12 @@ class TestDGeoFlowModel:
     @pytest.mark.parametrize(
         "dir_path",
         [
-            pytest.param("dgeoflow/Berekening3", id="Input Structure"),
+            pytest.param("dgeoflow/Berekening3.flox", id="Input Structure"),
         ],
     )
-    def test_given_data_when_parse_and_serialize_then_does_not_raise(self, dir_path: str):
+    def test_given_data_when_parse_and_serialize_then_does_not_raise(
+        self, dir_path: str
+    ):
         # 1. Set up test data.
         test_input_filepath = Path(TestUtils.get_local_test_data_dir(dir_path))
         dgeoflow_model = DGeoFlowModel(filename=None)
@@ -124,8 +123,9 @@ class TestDGeoFlowModel:
     @pytest.mark.parametrize(
         "dir_path",
         [
-            pytest.param("dgeoflow/Berekening3", id="Basic flow"),
-            pytest.param("dgeoflow/Tutorial", id="Tutorial"),
+            pytest.param("dgeoflow/Berekening3.flox", id="Basic flow"),
+            pytest.param("dgeoflow/Tutorial_v2022_1.flox", id="Tutorial"),
+            pytest.param("dgeoflow/Tutorial_v2026_1.flox", id="Tutorial v2026_1"),
         ],
     )
     def test_execute_model_successfully(self, dir_path: str):
@@ -157,7 +157,7 @@ class TestDGeoFlowModel:
 
         # 2. Run test
         with pytest.raises(Exception):
-            assert dm.execute()
+            dm.execute()
 
     @pytest.mark.unittest
     def test_execute_console_with_bytesio_raises_exception(self):
@@ -169,45 +169,13 @@ class TestDGeoFlowModel:
 
         # 2. Run test
         with pytest.raises(Exception):
-            assert dm.execute()
+            dm.execute()
 
     @pytest.mark.acceptance
     def test_generate_groundwater_flow_model(self):
         dm = DGeoFlowModel()
 
-        layer_1 = [
-            Point(x=-50, z=-10),
-            Point(x=50, z=-10),
-            Point(x=50, z=-20),
-            Point(x=-50, z=-20),
-        ]
-        layer_2 = [
-            Point(x=-50, z=-5),
-            Point(x=50, z=-5),
-            Point(x=50, z=-10),
-            Point(x=-50, z=-10),
-        ]
-        layer_3 = [
-            Point(x=-50, z=0),
-            Point(x=-10, z=0),
-            Point(x=30, z=0),
-            Point(x=50, z=0),
-            Point(x=50, z=-5),
-            Point(x=-50, z=-5),
-        ]
-        embankment = [
-            Point(x=-10, z=0),
-            Point(x=0, z=2),
-            Point(x=10, z=2),
-            Point(x=30, z=0),
-        ]
-
-        layers_and_soils = [
-            (layer_1, "Sand"),
-            (layer_2, "H_Ro_z&k"),
-            (layer_3, "H_Rk_k_shallow"),
-            (embankment, "H_Aa_ht_old"),
-        ]
+        layers_and_soils = TestUtils._get_standard_layers()
 
         for points, soil in layers_and_soils:
             dm.add_layer(points, soil)
@@ -226,46 +194,16 @@ class TestDGeoFlowModel:
         assert dm.datastructure
 
         assert len(dm.datastructure.groundwater_flow_results) == 1
-        assert len(dm.datastructure.groundwater_flow_results[0].Elements) == 386  # type: ignore
-        assert dm.datastructure.groundwater_flow_results[0].Elements[10].NodeResults[0].TotalPorePressure == 143.661  # type: ignore
+        assert len(dm.datastructure.groundwater_flow_results[0].Elements) == 386
+        assert dm.datastructure.groundwater_flow_results[0].Elements[10].NodeResults[
+            0
+        ].TotalPorePressure == pytest.approx(181.386)
 
     @pytest.mark.acceptance
     def test_generate_pipe_length_model(self):
         dm = DGeoFlowModel()
 
-        layer_1 = [
-            Point(x=-50, z=-10),
-            Point(x=50, z=-10),
-            Point(x=50, z=-20),
-            Point(x=-50, z=-20),
-        ]
-        layer_2 = [
-            Point(x=-50, z=-5),
-            Point(x=50, z=-5),
-            Point(x=50, z=-10),
-            Point(x=-50, z=-10),
-        ]
-        layer_3 = [
-            Point(x=-50, z=0),
-            Point(x=-10, z=0),
-            Point(x=30, z=0),
-            Point(x=50, z=0),
-            Point(x=50, z=-5),
-            Point(x=-50, z=-5),
-        ]
-        embankment = [
-            Point(x=-10, z=0),
-            Point(x=0, z=2),
-            Point(x=10, z=2),
-            Point(x=30, z=0),
-        ]
-
-        layers_and_soils = [
-            (layer_1, "Sand"),
-            (layer_2, "H_Ro_z&k"),
-            (layer_3, "H_Rk_k_shallow"),
-            (embankment, "H_Aa_ht_old"),
-        ]
+        layers_and_soils = TestUtils._get_standard_layers()
 
         for points, soil in layers_and_soils:
             dm.add_layer(points, soil)
@@ -298,47 +236,17 @@ class TestDGeoFlowModel:
         assert dm.datastructure
 
         assert len(dm.datastructure.pipe_length_results) == 1
-        assert len(dm.datastructure.pipe_length_results[0].Elements) == 640  # type: ignore
-        assert dm.datastructure.pipe_length_results[0].Elements[10].NodeResults[0].TotalPorePressure == 208.255  # type: ignore
-        assert dm.datastructure.pipe_length_results[0].PipeLength == 26.0
+        assert len(dm.datastructure.pipe_length_results[0].Elements) == 636
+        assert dm.datastructure.pipe_length_results[0].Elements[10].NodeResults[
+            0
+        ].TotalPorePressure == pytest.approx(246.15)
+        assert dm.datastructure.pipe_length_results[0].PipeLength == pytest.approx(26.0)
 
     @pytest.mark.acceptance
     def test_generate_critical_head_model(self):
         dm = DGeoFlowModel()
 
-        layer_1 = [
-            Point(x=-50, z=-10),
-            Point(x=50, z=-10),
-            Point(x=50, z=-20),
-            Point(x=-50, z=-20),
-        ]
-        layer_2 = [
-            Point(x=-50, z=-5),
-            Point(x=50, z=-5),
-            Point(x=50, z=-10),
-            Point(x=-50, z=-10),
-        ]
-        layer_3 = [
-            Point(x=-50, z=0),
-            Point(x=-10, z=0),
-            Point(x=30, z=0),
-            Point(x=50, z=0),
-            Point(x=50, z=-5),
-            Point(x=-50, z=-5),
-        ]
-        embankment = [
-            Point(x=-10, z=0),
-            Point(x=0, z=2),
-            Point(x=10, z=2),
-            Point(x=30, z=0),
-        ]
-
-        layers_and_soils = [
-            (layer_1, "Sand"),
-            (layer_2, "H_Ro_z&k"),
-            (layer_3, "H_Rk_k_shallow"),
-            (embankment, "H_Aa_ht_old"),
-        ]
+        layers_and_soils = TestUtils._get_standard_layers()
 
         for points, soil in layers_and_soils:
             dm.add_layer(points, soil)
@@ -376,10 +284,19 @@ class TestDGeoFlowModel:
         assert dm.datastructure
 
         assert len(dm.datastructure.critical_head_results) == 1
-        assert len(dm.datastructure.critical_head_results[0].Elements) == 640  # type: ignore
-        assert dm.datastructure.critical_head_results[0].Elements[10].NodeResults[0].TotalPorePressure == 208.968  # type: ignore
-        assert dm.datastructure.critical_head_results[0].PipeLength == 29.0
-        assert dm.datastructure.critical_head_results[0].CriticalHead == 17.5
+        assert len(dm.datastructure.critical_head_results[0].Elements) == 636
+        assert dm.datastructure.critical_head_results[0].Elements[10].NodeResults[
+            0
+        ].TotalPorePressure == pytest.approx(246.874)
+        assert dm.datastructure.critical_head_results[0].PipeLength == pytest.approx(
+            29.0
+        )
+        assert dm.datastructure.critical_head_results[0].CriticalHead == pytest.approx(
+            17.5
+        )
+        assert dm.datastructure.critical_head_results[
+            0
+        ].CriticalHeadDrop == pytest.approx(17.5)
 
     @pytest.mark.integrationtest
     def test_add_multiple_stages_and_calculations(self):
@@ -401,10 +318,14 @@ class TestDGeoFlowModel:
         dm.add_calculation(label="New Calculation 1", set_current=True)
 
         dm.add_stage(scenario_index=0, label="New Stage 2", set_current=True)
-        dm.add_calculation(scenario_index=0, label="New Calculation 2", set_current=True)
+        dm.add_calculation(
+            scenario_index=0, label="New Calculation 2", set_current=True
+        )
 
         dm.add_stage(scenario_index=1, label="New Stage 3", set_current=True)
-        dm.add_calculation(scenario_index=1, label="New Calculation 3", set_current=True)
+        dm.add_calculation(
+            scenario_index=1, label="New Calculation 3", set_current=True
+        )
 
         assert len(dm.scenarios) == 2
         assert len(dm.scenarios[0].Stages) == 2

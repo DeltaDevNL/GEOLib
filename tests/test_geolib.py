@@ -1,9 +1,10 @@
 import pytest
+
 from geolib import __version__
 
 from .context import geolib
 
-version = "2.8.0"
+version = "2.9.1"
 
 
 @pytest.mark.systemtest

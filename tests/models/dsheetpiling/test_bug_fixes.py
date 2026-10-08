@@ -1,15 +1,22 @@
 from pathlib import Path
 
-import geolib as gl
 import pytest
-from geolib.models.dsheetpiling.calculation_options import *
-from geolib.models.dsheetpiling.constructions import *
-from geolib.models.dsheetpiling.dsheetpiling_model import *
-from geolib.models.dsheetpiling.loads import *
-from geolib.models.dsheetpiling.profiles import *
-from geolib.models.dsheetpiling.settings import *
-from geolib.soils import *
 
+import geolib as gl
+from geolib.geometry.one import Point
+from geolib.models.dsheetpiling.dsheetpiling_model import SheetModelType
+from geolib.models.dsheetpiling.loads import (
+    Moment,
+    NormalForce,
+    SurchargeLoad,
+    UniformLoad,
+)
+from geolib.models.dsheetpiling.settings import (
+    LateralEarthPressureMethod,
+    LateralEarthPressureMethodStage,
+    PassiveSide,
+    Side,
+)
 from tests.utils import TestUtils
 
 test_file_directory = "dsheetpiling/bugfixes"
@@ -82,7 +89,9 @@ class TestDsheetPilingBugFixes:
         )
 
         # add uniform load
-        uniform_load = UniformLoad(name="New UniformLoad", left_load=10, right_load=12.5)
+        uniform_load = UniformLoad(
+            name="New UniformLoad", left_load=10, right_load=12.5
+        )
         # same load should be applied in both stages
         model.add_load(load=uniform_load, stage_id=stage_id - 1)
         model.add_load(load=uniform_load, stage_id=stage_id)

@@ -3,12 +3,13 @@ from random import choice, randint
 from string import ascii_lowercase
 
 import pytest
+from pydantic_core._pydantic_core import ValidationError
+
 from geolib.models.dfoundations.dfoundations_structures import (
     DFoundationsCPTCollectionWrapper,
     DFoundationsEnumStructure,
     DFoundationsTableWrapper,
 )
-from pydantic_core._pydantic_core import ValidationError
 
 
 class TestDFoundationsEnumStructure:
@@ -86,7 +87,10 @@ class TestDFoundationsTableWrapper:
         "table_type, expected_column_type, run_expectation",
         [
             pytest.param(
-                test_simple_table, [int, float, str], does_not_raise(), id="Int-Float-Str"
+                test_simple_table,
+                [int, float, str],
+                does_not_raise(),
+                id="Int-Float-Str",
             ),
             pytest.param(
                 test_table_str_first,
@@ -154,7 +158,7 @@ class TestDFoundationsTableWrapper:
                 keys[1]: float(randint(0, 100)),
                 keys[2]: "".join(choice(ascii_lowercase) for _ in range(4)),
             }
-            for idx in range(1, 4)
+            for _ in range(1, 4)
         ]
         text_to_parse = (
             ""

@@ -3,9 +3,11 @@ from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
 
+import pytest
+from pydantic import ValidationError
+
 import geolib.models.dsettlement.loads as loads
 import geolib.soils as soil_external
-import pytest
 from geolib.geometry.one import Point
 from geolib.models import BaseModel
 from geolib.models.dsettlement.drain_types import DrainGridType, DrainType
@@ -50,8 +52,6 @@ from geolib.soils import (
     StateType,
     StochasticParameter,
 )
-from pydantic import ValidationError
-
 from tests.utils import TestUtils, only_teamcity
 
 test_data_path = Path(TestUtils.get_local_test_data_dir("dsettlement"))
@@ -76,7 +76,6 @@ class TestDSettlementModel:
     @pytest.mark.workinprogress
     def test_DSettlementModel_instance(self):
         dsettlement_model = DSettlementModel()
-        assert dsettlement_model is not None
         assert isinstance(
             dsettlement_model, BaseModel
         ), "DSettlementModel does not instanciate BaseModel"
@@ -151,8 +150,12 @@ class TestDSettlementModel:
         assert len(ds.output.vertical[0].depths.depths) == 14
 
         # 5. Verify Stresses substructure
-        assert ds.output.vertical[0].stresses.stresses[0]["final_water_stress"] == 0.0
-        assert ds.output.vertical[0].stresses.stresses[-1]["initial_total_stress"] == 40.0
+        assert ds.output.vertical[0].stresses.stresses[0][
+            "final_water_stress"
+        ] == pytest.approx(0.0)
+        assert ds.output.vertical[0].stresses.stresses[-1][
+            "initial_total_stress"
+        ] == pytest.approx(40.0)
         assert (
             type(ds.output.vertical[0].stresses.stresses[-1]["initial_total_stress"])
             == float
@@ -164,9 +167,11 @@ class TestDSettlementModel:
             ds.output.residual_settlements[0].residualsettlements[0][
                 "residual_settlement"
             ]
-            == 0.1889574
+            == pytest.approx(0.1889574)
         )
-        assert ds.output.residual_settlements[0].residualsettlements[-1]["vertical"] == 1
+        assert (
+            ds.output.residual_settlements[0].residualsettlements[-1]["vertical"] == 1
+        )
         assert (
             type(
                 ds.output.residual_settlements[0].residualsettlements[-1][
@@ -209,7 +214,7 @@ class TestDSettlementModel:
 
         # 2. Run test
         with pytest.raises(Exception):
-            assert dm.execute()
+            dm.execute()
 
     @pytest.mark.unittest
     def test_execute_console_with_bytesio_raises_exception(self):
@@ -221,7 +226,7 @@ class TestDSettlementModel:
 
         # 2. Run test
         with pytest.raises(Exception):
-            assert dm.execute()
+            dm.execute()
 
     @pytest.mark.integrationtest
     def test_set_calculation_times(self):
@@ -363,7 +368,9 @@ class TestDSettlementModel:
                 errors.append(f"Key {ds_key} not serialized!")
                 continue
             if not (ds_value == output_datastructure[ds_key]):
-                errors.append(f"Values for key {ds_key} differ from parsed to serialized")
+                errors.append(
+                    f"Values for key {ds_key} differ from parsed to serialized"
+                )
         if errors:
             pytest.fail(f"Failed with the following {errors}")
 
@@ -550,10 +557,6 @@ class TestDSettlementModel:
         # Set up test data.
         point1 = Point(x=0.0, y=0.0, z=0.0)
         point2 = Point(x=100.0, y=0.0, z=0.0)
-        point3 = Point(x=0.0, y=0.0, z=1.0)
-        point4 = Point(x=100.0, y=0.0, z=1.0)
-        point5 = Point(x=0.0, y=0.0, z=-1.0)
-        point6 = Point(x=100.0, y=0.0, z=-1.0)
         # Set up model
         ds = DSettlementModel()
         ds.datastructure = DSettlementStructure()
@@ -761,7 +764,7 @@ class TestDSettlementModel:
 
         # Verify expectations
         assert len(ds.non_uniform_loads.loads) == 2
-        assert list(ds.non_uniform_loads.loads.values())[0].endtime == 100
+        assert next(iter(ds.non_uniform_loads.loads.values())).endtime == 100
 
     @pytest.mark.unittest
     def test_given_long_name_when_add_non_uniform_load_raises_pydantic_error(self):
@@ -834,15 +837,19 @@ class TestDSettlementModel:
         ds.serialize(test_output_filepath)
 
         # Verify data
-        assert list(ds.other_loads.loads.keys())[0] == "Load 1"
-        assert list(ds.other_loads.loads.values())[0].time == 1
-        assert list(ds.other_loads.loads.values())[0].load_values_trapeziform.gamma == 10
-        assert list(ds.other_loads.loads.values())[0].load_values_trapeziform.height == 2
-        assert list(ds.other_loads.loads.values())[0].load_values_trapeziform.xl == 0.1
-        assert list(ds.other_loads.loads.values())[0].load_values_trapeziform.xm == 0.2
-        assert list(ds.other_loads.loads.values())[0].load_values_trapeziform.xr == 0.3
-        assert list(ds.other_loads.loads.values())[0].load_values_trapeziform.Xp == 0.4
-        assert list(ds.other_loads.loads.values())[0].load_values_trapeziform.Yp == 0.5
+        assert next(iter(ds.other_loads.loads.keys())) == "Load 1"
+        assert next(iter(ds.other_loads.loads.values())).time == 1
+        assert (
+            next(iter(ds.other_loads.loads.values())).load_values_trapeziform.gamma == 10
+        )
+        assert (
+            next(iter(ds.other_loads.loads.values())).load_values_trapeziform.height == 2
+        )
+        assert next(iter(ds.other_loads.loads.values())).load_values_trapeziform.xl == pytest.approx(0.1)
+        assert next(iter(ds.other_loads.loads.values())).load_values_trapeziform.xm == pytest.approx(0.2)
+        assert next(iter(ds.other_loads.loads.values())).load_values_trapeziform.xr == pytest.approx(0.3)
+        assert next(iter(ds.other_loads.loads.values())).load_values_trapeziform.Xp == pytest.approx(0.4)
+        assert next(iter(ds.other_loads.loads.values())).load_values_trapeziform.Yp == pytest.approx(0.5)
 
     @pytest.mark.integrationtest
     def test_other_loads_circular(self):
@@ -856,14 +863,14 @@ class TestDSettlementModel:
             R=0.5,
         )
         ds.add_other_load(name, time, point, otc)
-        assert list(ds.other_loads.loads.keys())[0] == "Load 1"
-        assert list(ds.other_loads.loads.values())[0].time == 1
-        assert list(ds.other_loads.loads.values())[0].load_values_circular.weight == 10.1
-        assert list(ds.other_loads.loads.values())[0].load_values_circular.alpha == 0.1
-        assert list(ds.other_loads.loads.values())[0].load_values_circular.Xcp == 0.2
-        assert list(ds.other_loads.loads.values())[0].load_values_circular.Ycp == 0.3
-        assert list(ds.other_loads.loads.values())[0].load_values_circular.Zcp == 0.4
-        assert list(ds.other_loads.loads.values())[0].load_values_circular.R == 0.5
+        assert next(iter(ds.other_loads.loads.keys())) == "Load 1"
+        assert next(iter(ds.other_loads.loads.values())).time == 1
+        assert next(iter(ds.other_loads.loads.values())).load_values_circular.weight == pytest.approx(10.1)
+        assert next(iter(ds.other_loads.loads.values())).load_values_circular.alpha == pytest.approx(0.1)
+        assert next(iter(ds.other_loads.loads.values())).load_values_circular.Xcp == pytest.approx(0.2)
+        assert next(iter(ds.other_loads.loads.values())).load_values_circular.Ycp == pytest.approx(0.3)
+        assert next(iter(ds.other_loads.loads.values())).load_values_circular.Zcp == pytest.approx(0.4)
+        assert next(iter(ds.other_loads.loads.values())).load_values_circular.R == pytest.approx(0.5)
 
     @pytest.mark.integrationtest
     def test_other_loads_rectangular(self):
@@ -878,21 +885,15 @@ class TestDSettlementModel:
             zwidth=0.6,
         )
         ds.add_other_load(name, time, point, olr)
-        assert list(ds.other_loads.loads.keys())[0] == "Load 1"
-        assert list(ds.other_loads.loads.values())[0].time == 1
-        assert (
-            list(ds.other_loads.loads.values())[0].load_values_rectangular.weight == 10.1
-        )
-        assert list(ds.other_loads.loads.values())[0].load_values_rectangular.alpha == 0.1
-        assert list(ds.other_loads.loads.values())[0].load_values_rectangular.Xcp == 0.2
-        assert list(ds.other_loads.loads.values())[0].load_values_rectangular.Ycp == 0.3
-        assert list(ds.other_loads.loads.values())[0].load_values_rectangular.Zcp == 0.4
-        assert (
-            list(ds.other_loads.loads.values())[0].load_values_rectangular.xwidth == 0.5
-        )
-        assert (
-            list(ds.other_loads.loads.values())[0].load_values_rectangular.zwidth == 0.6
-        )
+        assert next(iter(ds.other_loads.loads.keys())) == "Load 1"
+        assert next(iter(ds.other_loads.loads.values())).time == 1
+        assert next(iter(ds.other_loads.loads.values())).load_values_rectangular.weight == pytest.approx(10.1)
+        assert next(iter(ds.other_loads.loads.values())).load_values_rectangular.alpha == pytest.approx(0.1)
+        assert next(iter(ds.other_loads.loads.values())).load_values_rectangular.Xcp == pytest.approx(0.2)
+        assert next(iter(ds.other_loads.loads.values())).load_values_rectangular.Ycp == pytest.approx(0.3)
+        assert next(iter(ds.other_loads.loads.values())).load_values_rectangular.Zcp == pytest.approx(0.4)
+        assert next(iter(ds.other_loads.loads.values())).load_values_rectangular.xwidth == pytest.approx(0.5)
+        assert next(iter(ds.other_loads.loads.values())).load_values_rectangular.zwidth == pytest.approx(0.6)
 
     @pytest.mark.integrationtest
     def test_other_loads_tank(self):
@@ -908,18 +909,16 @@ class TestDSettlementModel:
             dWall=0.6,
         )
         ds.add_other_load(name, time, point, olt)
-        assert list(ds.other_loads.loads.keys())[0] == "Load 1"
-        assert list(ds.other_loads.loads.values())[0].time == 1
-        assert list(ds.other_loads.loads.values())[0].load_values_tank.wallweight == 10.1
-        assert (
-            list(ds.other_loads.loads.values())[0].load_values_tank.internalweight == 10.2
-        )
-        assert list(ds.other_loads.loads.values())[0].load_values_tank.alpha == 0.1
-        assert list(ds.other_loads.loads.values())[0].load_values_tank.Xcp == 0.2
-        assert list(ds.other_loads.loads.values())[0].load_values_tank.Ycp == 0.3
-        assert list(ds.other_loads.loads.values())[0].load_values_tank.Zcp == 0.4
-        assert list(ds.other_loads.loads.values())[0].load_values_tank.Rintern == 0.5
-        assert list(ds.other_loads.loads.values())[0].load_values_tank.dWall == 0.6
+        assert next(iter(ds.other_loads.loads.keys())) == "Load 1"
+        assert next(iter(ds.other_loads.loads.values())).time == 1
+        assert next(iter(ds.other_loads.loads.values())).load_values_tank.wallweight == pytest.approx(10.1)
+        assert next(iter(ds.other_loads.loads.values())).load_values_tank.internalweight == pytest.approx(10.2)
+        assert next(iter(ds.other_loads.loads.values())).load_values_tank.alpha == pytest.approx(0.1)
+        assert next(iter(ds.other_loads.loads.values())).load_values_tank.Xcp == pytest.approx(0.2)
+        assert next(iter(ds.other_loads.loads.values())).load_values_tank.Ycp == pytest.approx(0.3)
+        assert next(iter(ds.other_loads.loads.values())).load_values_tank.Zcp == pytest.approx(0.4)
+        assert next(iter(ds.other_loads.loads.values())).load_values_tank.Rintern == pytest.approx(0.5)
+        assert next(iter(ds.other_loads.loads.values())).load_values_tank.dWall == pytest.approx(0.6)
 
     @pytest.mark.integrationtest
     def test_other_loads_uniform(self):
@@ -929,15 +928,17 @@ class TestDSettlementModel:
         p = Point(z=0.2)
         olu = loads.UniformLoad(unit_weight=2, height=0.1, gamma=0.3)
         ds.add_other_load(name, time, p, olu)
-        assert list(ds.other_loads.loads.keys())[0] == "Load 1"
-        assert list(ds.other_loads.loads.values())[0].time == 1
-        assert list(ds.other_loads.loads.values())[0].load_values_uniform.unit_weight == 2
-        assert list(ds.other_loads.loads.values())[0].load_values_uniform.height == 0.1
+        assert next(iter(ds.other_loads.loads.keys())) == "Load 1"
+        assert next(iter(ds.other_loads.loads.values())).time == 1
         assert (
-            list(ds.other_loads.loads.values())[0].load_values_uniform.y_application
-            == 0.2
+            next(iter(ds.other_loads.loads.values())).load_values_uniform.unit_weight == 2
         )
-        assert list(ds.other_loads.loads.values())[0].load_values_uniform.gamma == 0.3
+        assert next(iter(ds.other_loads.loads.values())).load_values_uniform.height == pytest.approx(0.1)
+        assert (
+            next(iter(ds.other_loads.loads.values())).load_values_uniform.y_application
+            == pytest.approx(0.2)
+        )
+        assert next(iter(ds.other_loads.loads.values())).load_values_uniform.gamma == pytest.approx(0.3)
 
     @pytest.mark.integrationtest
     def test_piezo_lines(self):
@@ -957,7 +958,9 @@ class TestDSettlementModel:
         list3 = [point5, point6]
 
         # Verify defaults
-        assert ds.datastructure.input_data.geometry_data.phreatic_line.phreatic_line == 0
+        assert (
+            ds.datastructure.input_data.geometry_data.phreatic_line.phreatic_line == 0
+        )
 
         # Verify add_head_line
         h_id = ds.add_head_line(points=list1, is_phreatic=True)
@@ -967,7 +970,8 @@ class TestDSettlementModel:
             ].points[0]
         ] == DSeriePoint.from_point(point1)
         assert (
-            ds.datastructure.input_data.geometry_data.phreatic_line.phreatic_line == h_id
+            ds.datastructure.input_data.geometry_data.phreatic_line.phreatic_line
+            == h_id
         )
         assert ds.datastructure.input_data.geometry_data.points[
             ds.datastructure.input_data.geometry_data.curves[
@@ -981,14 +985,16 @@ class TestDSettlementModel:
         h_id2 = ds.add_head_line(points=list2, is_phreatic=True)
         assert h_id2 != h_id
         assert (
-            ds.datastructure.input_data.geometry_data.phreatic_line.phreatic_line == h_id2
+            ds.datastructure.input_data.geometry_data.phreatic_line.phreatic_line
+            == h_id2
         )
 
         # Add another headline with duplicate points, should still be added
         h_id3 = ds.add_head_line(points=list3)
         assert h_id3 != h_id2
         assert (
-            ds.datastructure.input_data.geometry_data.phreatic_line.phreatic_line == h_id2
+            ds.datastructure.input_data.geometry_data.phreatic_line.phreatic_line
+            == h_id2
         )
         assert len(ds.points.points) == 6
 
@@ -1030,7 +1036,7 @@ class TestDSettlementModel:
         assert model_dump["name"] == "MyNewSoil"
         assert model_dump["soilgamdry"] == 30
         assert model_dump["soilgamwet"] == 20
-        assert model_dump["soilinitialvoidratio"] == 0.1
+        assert model_dump["soilinitialvoidratio"] == pytest.approx(0.1)
 
     @pytest.mark.integrationtest
     def test_add_soil_name_already_defined(self):
@@ -1073,7 +1079,9 @@ class TestDSettlementModel:
         assert ds.datastructure.input_data.model.strain_type == StrainType.LINEAR
         assert ds.datastructure.input_data.model.is_vertical_drains == Bool.TRUE
         assert ds.datastructure.input_data.model.is_probabilistic == Bool.TRUE
-        assert ds.datastructure.input_data.model.is_horizontal_displacements == Bool.TRUE
+        assert (
+            ds.datastructure.input_data.model.is_horizontal_displacements == Bool.TRUE
+        )
         assert ds.datastructure.input_data.model.is_secondary_swelling == Bool.TRUE
 
     @pytest.mark.systemtest
@@ -1114,16 +1122,17 @@ class TestDSettlementModel:
             == DispersionConditionLayerBoundary.DRAINED
         )
         assert (
-            calculation_options.stress_distribution_soil == StressDistributionSoil.BUISMAN
+            calculation_options.stress_distribution_soil
+            == StressDistributionSoil.BUISMAN
         )
         assert (
             calculation_options.stress_distribution_loads
             == StressDistributionLoads.SIMULATE
         )
-        assert calculation_options.iteration_stop_criteria_submerging == 0.0
+        assert calculation_options.iteration_stop_criteria_submerging == pytest.approx(0.0)
         assert calculation_options.iteration_stop_criteria_submerging_layer_height == 0
         assert calculation_options.maximum_iteration_steps_for_submerging == 1
-        assert calculation_options.iteration_stop_criteria_desired_profile == 0.1
+        assert calculation_options.iteration_stop_criteria_desired_profile == pytest.approx(0.1)
         assert calculation_options.load_column_width_imaginary_surface == 1
         assert calculation_options.load_column_width_non_uniform_loads == 1
         assert calculation_options.load_column_width_trapeziform_loads == 1
@@ -1131,9 +1140,9 @@ class TestDSettlementModel:
         assert calculation_options.number_of_subtime_steps == 2
         assert calculation_options.reference_time == 1
         assert calculation_options.dissipation == Bool.FALSE
-        assert calculation_options.x_coord_dissipation == 0.0
+        assert calculation_options.x_coord_dissipation == pytest.approx(0.0)
         assert calculation_options.use_fit_factors == Bool.FALSE
-        assert calculation_options.x_coord_fit == 0.0
+        assert calculation_options.x_coord_fit == pytest.approx(0.0)
         assert (
             calculation_options.is_predict_settlements_omitting_additional_load_steps
             == Bool.FALSE
@@ -1203,12 +1212,13 @@ class TestDSettlementModel:
             == StressDistributionSoil.BOUSSINESQ
         )
         assert (
-            calculation_options.stress_distribution_loads == StressDistributionLoads.NONE
+            calculation_options.stress_distribution_loads
+            == StressDistributionLoads.NONE
         )
-        assert calculation_options.iteration_stop_criteria_submerging == 1.0
+        assert calculation_options.iteration_stop_criteria_submerging == pytest.approx(1.0)
         assert calculation_options.iteration_stop_criteria_submerging_layer_height == 1
         assert calculation_options.maximum_iteration_steps_for_submerging == 2
-        assert calculation_options.iteration_stop_criteria_desired_profile == 0.2
+        assert calculation_options.iteration_stop_criteria_desired_profile == pytest.approx(0.2)
         assert calculation_options.load_column_width_imaginary_surface == 2
         assert calculation_options.load_column_width_non_uniform_loads == 2
         assert calculation_options.load_column_width_trapeziform_loads == 2
@@ -1216,9 +1226,9 @@ class TestDSettlementModel:
         assert calculation_options.number_of_subtime_steps == 3
         assert calculation_options.reference_time == 2
         assert calculation_options.dissipation == Bool.TRUE
-        assert calculation_options.x_coord_dissipation == 1.0
+        assert calculation_options.x_coord_dissipation == pytest.approx(1.0)
         assert calculation_options.use_fit_factors == Bool.TRUE
-        assert calculation_options.x_coord_fit == 1.0
+        assert calculation_options.x_coord_fit == pytest.approx(1.0)
         assert (
             calculation_options.is_predict_settlements_omitting_additional_load_steps
             == Bool.TRUE
@@ -1352,11 +1362,15 @@ class TestDSettlementModel:
             )
             soil.soil_state.pop_layer.mean = 5
             soil.isotache_parameters.precon_isotache_type = StateType.POP
-            soil.isotache_parameters.reloading_swelling_constant_a = StochasticParameter(
-                mean=1.000e-02, standard_deviation=2.500e-03, correlation_coefficient=0.01
+            soil.isotache_parameters.reloading_swelling_constant_a = (
+                StochasticParameter(
+                    mean=1.000e-02,
+                    standard_deviation=2.500e-03,
+                    correlation_coefficient=0.01,
+                )
             )
-            soil.isotache_parameters.primary_compression_constant_b = StochasticParameter(
-                mean=1.000e-01, standard_deviation=2.500e-03
+            soil.isotache_parameters.primary_compression_constant_b = (
+                StochasticParameter(mean=1.000e-01, standard_deviation=2.500e-03)
             )
             soil.isotache_parameters.secondary_compression_constant_c = (
                 StochasticParameter(
@@ -1365,41 +1379,37 @@ class TestDSettlementModel:
                     correlation_coefficient=0.01,
                 )
             )
-            s1 = dm.add_soil(soil)
+            dm.add_soil(soil)
 
-            l1 = dm.add_layer(
+            dm.add_layer(
                 material_name="Sand",
                 head_line_top=pl_id,
                 head_line_bottom=pl_id,
                 boundary_top=b1,
                 boundary_bottom=b2,
             )
-            l2 = dm.add_layer(
-                # material_name="H_Ro_z&k",
+            dm.add_layer(
                 material_name="Sand",
                 head_line_top=pl_id,
                 head_line_bottom=pl_id,
                 boundary_top=b2,
                 boundary_bottom=b3,
             )
-            l3 = dm.add_layer(
-                # material_name="HV",
+            dm.add_layer(
                 material_name="Sand",
                 head_line_top=pl_id,
                 head_line_bottom=pl_id,
                 boundary_top=b3,
                 boundary_bottom=b4,
             )
-            l4 = dm.add_layer(
-                # material_name="H_Aa_ht_old",
+            dm.add_layer(
                 material_name="Sand",
                 head_line_top=pl_id,
                 head_line_bottom=pl_id,
                 boundary_top=b4,
                 boundary_bottom=b5,
             )
-            l5 = dm.add_layer(
-                # material_name="H_Aa_ht_old",
+            dm.add_layer(
                 material_name="Sand",
                 head_line_top=pl_id,
                 head_line_bottom=pl_id,
@@ -1483,12 +1493,16 @@ class TestDSettlementModel:
         ds.set_vertical_drain(test_drain)
         # check final expectations
         assert (
-            ds.datastructure.input_data.vertical_drain.drain_type == test_drain.drain_type
+            ds.datastructure.input_data.vertical_drain.drain_type
+            == test_drain.drain_type
         )
         assert (
-            ds.datastructure.input_data.vertical_drain.range_from == test_drain.range_from
+            ds.datastructure.input_data.vertical_drain.range_from
+            == test_drain.range_from
         )
-        assert ds.datastructure.input_data.vertical_drain.range_to == test_drain.range_to
+        assert (
+            ds.datastructure.input_data.vertical_drain.range_to == test_drain.range_to
+        )
         assert (
             ds.datastructure.input_data.vertical_drain.bottom_position
             == test_drain.bottom_position
@@ -1545,12 +1559,16 @@ class TestDSettlementModel:
         ds.set_vertical_drain(test_drain)
         # check final expectations
         assert (
-            ds.datastructure.input_data.vertical_drain.drain_type == test_drain.drain_type
+            ds.datastructure.input_data.vertical_drain.drain_type
+            == test_drain.drain_type
         )
         assert (
-            ds.datastructure.input_data.vertical_drain.range_from == test_drain.range_from
+            ds.datastructure.input_data.vertical_drain.range_from
+            == test_drain.range_from
         )
-        assert ds.datastructure.input_data.vertical_drain.range_to == test_drain.range_to
+        assert (
+            ds.datastructure.input_data.vertical_drain.range_to == test_drain.range_to
+        )
         assert (
             ds.datastructure.input_data.vertical_drain.bottom_position
             == test_drain.bottom_position
@@ -1559,7 +1577,9 @@ class TestDSettlementModel:
             ds.datastructure.input_data.vertical_drain.center_to_center
             == test_drain.center_to_center
         )
-        assert ds.datastructure.input_data.vertical_drain.diameter == test_drain.diameter
+        assert (
+            ds.datastructure.input_data.vertical_drain.diameter == test_drain.diameter
+        )
         assert ds.datastructure.input_data.vertical_drain.width == pytest.approx(0.1)
         assert ds.datastructure.input_data.vertical_drain.thickness == pytest.approx(
             0.003
@@ -1626,12 +1646,16 @@ class TestDSettlementModel:
         ds.set_vertical_drain(test_drain)
         # check final expectations
         assert (
-            ds.datastructure.input_data.vertical_drain.drain_type == test_drain.drain_type
+            ds.datastructure.input_data.vertical_drain.drain_type
+            == test_drain.drain_type
         )
         assert (
-            ds.datastructure.input_data.vertical_drain.range_from == test_drain.range_from
+            ds.datastructure.input_data.vertical_drain.range_from
+            == test_drain.range_from
         )
-        assert ds.datastructure.input_data.vertical_drain.range_to == test_drain.range_to
+        assert (
+            ds.datastructure.input_data.vertical_drain.range_to == test_drain.range_to
+        )
         assert (
             ds.datastructure.input_data.vertical_drain.bottom_position
             == test_drain.bottom_position
@@ -1796,40 +1820,36 @@ class TestDSettlementModel:
         soil.isotache_parameters.secondary_compression_constant_c = StochasticParameter(
             mean=5.000e-03, standard_deviation=1.250e-03, correlation_coefficient=0.01
         )
-        s1 = dm.add_soil(soil)
-        l1 = dm.add_layer(
+        dm.add_soil(soil)
+        dm.add_layer(
             material_name="Sand",
             head_line_top=pl_id,
             head_line_bottom=pl_id,
             boundary_top=b1,
             boundary_bottom=b2,
         )
-        l2 = dm.add_layer(
-            # material_name="H_Ro_z&k",
+        dm.add_layer(
             material_name="Sand",
             head_line_top=pl_id,
             head_line_bottom=pl_id,
             boundary_top=b2,
             boundary_bottom=b3,
         )
-        l3 = dm.add_layer(
-            # material_name="HV",
+        dm.add_layer(
             material_name="Sand",
             head_line_top=pl_id,
             head_line_bottom=pl_id,
             boundary_top=b3,
             boundary_bottom=b4,
         )
-        l4 = dm.add_layer(
-            # material_name="H_Aa_ht_old",
+        dm.add_layer(
             material_name="Sand",
             head_line_top=pl_id,
             head_line_bottom=pl_id,
             boundary_top=b4,
             boundary_bottom=b5,
         )
-        l5 = dm.add_layer(
-            # material_name="H_Aa_ht_old",
+        dm.add_layer(
             material_name="Sand",
             head_line_top=pl_id,
             head_line_bottom=pl_id,
